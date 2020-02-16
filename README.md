@@ -26,6 +26,7 @@ RewriteRule (.*) /public/$1 [L]
 
 ##Задание 2.
 
+Вызов данных по API.
 ```/get_table_data/page=1&limit=5```
 
 ##Задание 3.
@@ -42,3 +43,4 @@ RewriteRule (.*) /public/$1 [L]
 Например ```/get_table_data/page=1&limit=5&filter=id,ASC```
 
 
+P.S. роутинги находятся в файле ```routes/web.php```. Логика в контроллерах ```app/Http/Controllers/Controller.php``` и ```app/Http/Controllers/ApiController.php```
