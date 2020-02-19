@@ -2,10 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\DB;
+use App\Repositories\DataBaseRepositoryInterface as DataBase;
 
 class ApiController extends Controller
 {
+
+    public function __construct(DataBase $dataBase)
+    {
+        parent::__construct($dataBase);
+    }
+
     public function data()
     {
         $status = 1;
@@ -23,7 +29,7 @@ class ApiController extends Controller
         }
 
         try {
-            $results = DB::table('test')->select('*')->orderBy($orderBy, $direction)->get();//получаем данные из таблицы
+            $results = $this->dataBase->filter($orderBy, $direction);//получаем данные из таблицы
         } catch(\Exception $e){
 
             $status = 0;

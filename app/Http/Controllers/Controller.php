@@ -3,25 +3,28 @@
 namespace App\Http\Controllers;
 
 
+use App\Repositories\DataBaseRepositoryInterface as DataBase;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+
+    protected $dataBase;
 
     protected $db;
 
     protected $table;
 
 
-    public function __construct()
+    public function __construct(DataBase $dataBase)
     {
+        $this->dataBase = $dataBase;
         request('db')?$this->db = request('db'):$this->db = '';//если есть название БД
         request('table')?$this->table = request('table'):$this->table = '';//если есть название таблицы
     }
@@ -32,7 +35,7 @@ class Controller extends BaseController
     {
         !request('table')?:$this->dropTable();//если есть параметр, то удаляем табл.
 
-        return $this->sql();
+        return $this->dataBase->sql(request('file'), $this->db);
 
     }
 
@@ -44,24 +47,7 @@ class Controller extends BaseController
 
         }
 
-        return $this->sql();
-    }
-
-    public function sql()
-    {
-        if(request('file') && Storage::disk('public')->exists('sql/'.request('file'))) { //проверяем есть ли файл
-
-            $cmd = 'mysql --user='.config('app.db_user').' --password='.config('app.db_pass').' '.$this->db.' < "'.storage_path('app\public\sql\\'.request('file')).'"'; //подготавливаем комманду
-
-            exec($cmd);//выполняем комманду
-
-            return ['success' => 'DB created'];//вывводим сообщение об успехе
-
-        } else{
-
-            return ['error' => 'File name '.request('file').' is not exist!']; // выводим сообщение если файл не найден
-
-        }
+        return $this->dataBase->sql(request('file'), $this->db);
     }
 
     public function dropTable()
