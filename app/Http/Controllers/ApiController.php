@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Repositories\DataBaseRepositoryInterface as DataBase;
+use Doctrine\ORM\EntityManagerInterface;
 
 class ApiController extends Controller
 {
+    protected $em;
 
-    public function __construct(DataBase $dataBase)
+    public function __construct(DataBase $dataBase, EntityManagerInterface $em)
     {
         parent::__construct($dataBase);
+
+        $this->em = $em;
     }
 
     public function data()
@@ -18,25 +22,31 @@ class ApiController extends Controller
         $error = '';
         $body = [];
 
-        $orderBy = 'id';
+        $orderBy = 't.id';
         $direction = 'ASC';
 
         $filter = explode(',',request('filter'));//достаем параметры фильтра
 
         if(count($filter) > 1){
-            $orderBy = $filter[0];
+            $orderBy = 't'.$filter[0];
             $direction = $filter[1];
         }
+        $qb = $this->em->createQueryBuilder()
+            ->select("t")
+            ->from(\App\Entities\DataBase::class, 't')
+            ->orderBy($orderBy,$direction);
 
-        try {
-            $results = $this->dataBase->filter($orderBy, $direction);//получаем данные из таблицы
-        } catch(\Exception $e){
-
-            $status = 0;
-            $error = $e->getMessage();// если есть ошибка пишем ее
-
-            return $this->json($status, $error);//выводим ошибку
-        }
+        $results =  $qb->getQuery()->getResult();;
+              dd($results);
+//        try {
+//            $results = $this->dataBase->filter($orderBy, $direction);//получаем данные из таблицы
+//        } catch(\Exception $e){
+//
+//            $status = 0;
+//            $error = $e->getMessage();// если есть ошибка пишем ее
+//
+//            return $this->json($status, $error);//выводим ошибку
+//        }
 
         $data = $results->chunk(request('limit'));//разбиваем по лимиту
 
